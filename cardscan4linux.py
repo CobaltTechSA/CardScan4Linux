@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import datetime
 # Version: 1.1.0
 # Author: Adam Govier (ins1gn1a) - September 2015
 # Email: me@ins1gn1a.com
@@ -35,10 +35,10 @@ class bcolors:
 
 # Input argument setup
 p = argparse.ArgumentParser(description='Search Linux-based systems for payment card numbers (VISA, AMEX, Mastercard).')
-p.add_argument('-o', '--output', dest='output', help='Output data to a file instead of the Terminal.',
-               action='store_true')
-p.add_argument('-b', '--brands', dest='brands', help='Indicates card brands separate by spaces (Default is [visa '
-                                                     'mastercard amex]', default='visa mastercard amex')
+p.add_argument('-o', '--output', dest='output', help='Output data to a file instead of the Terminal.')
+p.add_argument('-b', '--brands', dest='brands',
+               help='Indicates card brands separate by spaces (Default is [visa mastercard amex]',
+               default='visa mastercard amex')
 p.add_argument('-D', '--max-depth', dest='depth',
                help='Enter the max depth that the scanner will search from the given directory (Default is 3).',
                type=int, default=3)
@@ -212,6 +212,12 @@ total_count = 0
 
 # Search through files in the list
 try:
+    log_file = None
+    if options.output:
+        log_file = open(options.output, 'a')
+        now = datetime.datetime.now()
+        log_file.write("Hunting card numbers on " + now.strftime('%Y-%m-%D %H:%M:%S') + "\n")
+
     for filepath in full_path_list:
         filepath = filepath.rstrip('\n'.encode())
         try:
@@ -219,8 +225,6 @@ try:
                 if options.verbose:
                     print(bcolors.OKBLUE + '[*] Scanning file %s...' % filepath + bcolors.ENDC)
                 total_count += 1
-                with open('/tmp/cardscan4linux.log', 'w') as log_file:
-                    log_file.write(str(file_lines) + "/" + str(total_count) + "\n")
 
                 i = 0
                 results = []
@@ -241,12 +245,11 @@ try:
 
                 if i > 0:
                     fileErrorOutput = "Found %d card numbers on file %s\n" % (len(results), str(filepath))
-                    if options.output:
-                        with open('cardscan.output', "a") as outfile:
-                            outfile.write(fileErrorOutput)
-                            if options.verbose:
-                                for result in results:
-                                    outfile.write(result + "\n")
+                    if log_file:
+                        log_file.write(fileErrorOutput)
+                        if options.verbose:
+                            for result in results:
+                                log_file.write(result + "\n")
                     else:
                         print(bcolors.FAIL + fileErrorOutput + bcolors.ENDC)
                         if options.verbose:
@@ -256,9 +259,9 @@ try:
         except KeyboardInterrupt:
             break
         except Exception as e:
-            with open('cardscan4linux-error.log', 'a') as errlog:
+            if log_file:
                 traceback.print_exc()
-                errlog.write("File: " + str(filepath) + "\n" + str(e) + "\n")
+                log_file.write("File: " + str(filepath) + "\n" + str(e) + "\n")
             print(bcolors.FAIL + "[*] " + bcolors.ENDC + "Cannot process file '" + str(filepath) + "'.")
             continue
 except Exception as e:
@@ -278,4 +281,4 @@ print(bcolors.OKGREEN + "[*] " + bcolors.ENDC + "Card scanning complete. " + str
     file_lines) + " total files were scanned in " + str(total_time) + " seconds.")
 if options.output:
     print(bcolors.OKGREEN + "[*] " + bcolors.ENDC + "Output saved to " + (
-        os.path.dirname(os.path.realpath(__file__))) + "/cardscan.output.")
+        os.path.dirname(os.path.realpath(__file__))) + options.output)
