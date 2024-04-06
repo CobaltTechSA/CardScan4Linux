@@ -4,7 +4,10 @@
 This script can be used to locally search through stored files for any Credit/Debit card details. It is portable and requires no additional Python (built with 2.7 in mind) libraries to operate.
 
 ## Basic Usage 
-`cardscan4linux.py [-h] [-o] [-D DEPTH] [-d MINDEPTH] [-l LINES] [-p PATH] -e EXTENSIONS [EXTENSIONS ...] [-x EXCLUDE_DIR [EXCLUDE_DIR ...]] [-max MAXSIZE] [-min MINSIZE] [-mount] [-v]`
+`cardscan4linux.py [-h] [-o] [-b BRANDS] [-D DEPTH] [-d MINDEPTH] [-l LINES] [-p PATH] -e EXTENSIONS [EXTENSIONS ...] [-x EXCLUDE_DIR [EXCLUDE_DIR ...]] [-max MAXSIZE] [-min MINSIZE] [-mount] [-v]`
+
+## Brands
+The `-b` and `--brands` command flags are used to specify the card brands to find. Available `visa`, `mastercard` and `amex`.
 
 ## Scan Depth
 The `-d` and `-D` command flags are used to specify the minimum scan depth, and also the maximum scan depth. This is useful for instances where too many symlinked directories result in `find` errors.
