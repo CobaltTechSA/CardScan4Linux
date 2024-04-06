@@ -280,5 +280,4 @@ total_time = int(timeit.default_timer()) - int(start_time)
 print(bcolors.OKGREEN + "[*] " + bcolors.ENDC + "Card scanning complete. " + str(
     file_lines) + " total files were scanned in " + str(total_time) + " seconds.")
 if options.output:
-    print(bcolors.OKGREEN + "[*] " + bcolors.ENDC + "Output saved to " + (
-        os.path.dirname(os.path.realpath(__file__))) + options.output)
+    print(bcolors.OKGREEN + "[*] " + bcolors.ENDC + "Output saved to " + (os.path.realpath(options.output)))
