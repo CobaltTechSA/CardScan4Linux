@@ -216,7 +216,7 @@ try:
     if options.output:
         log_file = open(options.output, 'a')
         now = datetime.datetime.now()
-        log_file.write("Hunting card numbers on " + now.strftime('%Y-%m-%D %H:%M:%S') + "\n")
+        log_file.write("Hunting card numbers on " + now.strftime('%Y-%m-%d %H:%M:%S') + "\n")
 
     for filepath in full_path_list:
         filepath = filepath.rstrip('\n'.encode())
