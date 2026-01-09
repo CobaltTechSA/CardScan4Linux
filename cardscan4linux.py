@@ -243,18 +243,23 @@ try:
                                     i += 1
                                     results.append("\t" + b.upper() + ":\t" + bcolors.FAIL + result + bcolors.ENDC)
 
-                if i > 0:
-                    fileErrorOutput = "Found %d card numbers on file %s\n" % (len(results), str(filepath))
-                    if log_file:
-                        log_file.write(fileErrorOutput)
-                        if options.verbose:
-                            for result in results:
-                                log_file.write(result + "\n")
-                    else:
-                        print(bcolors.FAIL + fileErrorOutput + bcolors.ENDC)
-                        if options.verbose:
-                            for result in results:
-                                print(result)
+                has_card_numbers = i > 0
+                if has_card_numbers:
+                    fileResultOutput = "Found %d card numbers on file %s\n" % (len(results), str(filepath))
+                else:
+                    fileResultOutput = "No card numbers found on file %s\n" % (str(filepath))
+
+                if log_file:
+                    log_file.write(fileResultOutput)
+                    if options.verbose:
+                        for result in results:
+                            log_file.write(result + "\n")
+                else:
+                    print(bcolors.FAIL + fileResultOutput + bcolors.ENDC)
+                    if options.verbose:
+                        for result in results:
+                            print(result)
+
 
         except KeyboardInterrupt:
             break
