@@ -4,7 +4,7 @@
 This script can be used to locally search through stored files for any Credit/Debit card details. It is portable and requires no additional Python (built with 2.7 in mind) libraries to operate.
 
 ## Basic Usage 
-`cardscan4linux.py [-h] [-o] [-b BRANDS] [-D DEPTH] [-d MINDEPTH] [-l LINES] [-p PATH] -e EXTENSIONS [EXTENSIONS ...] [-x EXCLUDE_DIR [EXCLUDE_DIR ...]] [-max MAXSIZE] [-min MINSIZE] [-mount] [-v]`
+`cardscan4linux.py [-h] [-o OUTPUT] [-b {visa,mastercard,amex} ...] [-D DEPTH] [-d MINDEPTH] [-l LINES] [-p PATH] [-e EXTENSIONS ...] [-x EXCLUDE_DIR ...] [-max MAXSIZE] [-min MINSIZE] [-mount] [-v]`
 
 ## Brands
 The `-b` and `--brands` command flags are used to specify the card brands to find. Available `visa`, `mastercard` and `amex`.
@@ -13,7 +13,7 @@ The `-b` and `--brands` command flags are used to specify the card brands to fin
 The `-d` and `-D` command flags are used to specify the minimum scan depth, and also the maximum scan depth. This is useful for instances where too many symlinked directories result in `find` errors.
 
 * Default Min: 0
-* Default Max: 3
+* Default Max: unlimited
 
 ## Remote Scanning via Mounting
 By mounting a remote file system to the local (i.e. where the script will be run) Linux system you can effectively scan the remote host by using the `-mount` command flag when running the tool. By default remote mounted systems are not scanned.
@@ -32,8 +32,8 @@ The `-min/--max-size` and `-max/--max-size` command flags are used when performi
 
 Sizes are denoted within 'bytes', c = bytes, k = Kilobytes, M = Megabytes, G = Gigabytes
 
-* Default Min: 16c
-* Default Max: 100k
+* Default Min: 0
+* Default Max: unlimited
 
 ## Extensions
 To specify the targeted file-extensions use the `-e/--extensions` command flag, with one or more extension types separated by spaces. For example: `-e txt doc xlsx csv`. There is no limit to the amount of extensions that can be used for the search, however bear in mind that the more extensions that are specified then the longer the scan could possibly take to complete. Be weary whilst scaning file-storage servers.
@@ -41,9 +41,12 @@ To specify the targeted file-extensions use the `-e/--extensions` command flag, 
 * Default: NONE
 
 ## Max Number of Lines to Audit
-By default the maximum number of lines that will be audited within each file will be '50'. Specifying more will perform a more thorough scan for card data, but more resources will be used and the total scan time will increase. Example: `-l 250`
+By default the complete content of every selected file is audited. Set a positive limit only when intentionally sampling files. Example: `-l 250`. ZIP-based formats such as DOCX and XLSX are inspected member by member.
 
-* Default: 50
+* Default: 0 (unlimited)
+
+## Safe output
+PAN findings are always masked to the first six and last four digits. `--verbose` adds the masked value and its source; it never writes the complete PAN to the terminal or log.
 
 ## Optional Arguments:
 `-h, --help`          Show this help message and exit
