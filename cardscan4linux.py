@@ -61,6 +61,14 @@ def find_pans(text, brands=SUPPORTED_BRANDS):
             yield brand, number
 
 
+def mask_pans_in_text(text):
+    def replace(match):
+        number = re.sub(r"[ \t-]", "", match.group())
+        return mask_pan(number) if card_brand(number) and is_luhn_valid(number) else match.group()
+
+    return PAN_RE.sub(replace, text)
+
+
 def decode_content(data):
     if data.startswith((b"\xff\xfe", b"\xfe\xff")):
         try:
@@ -132,12 +140,26 @@ def discover_files(root, max_depth=None, min_depth=0, extensions=None,
 
 
 def scan_file(path, brands=SUPPORTED_BRANDS, line_limit=0):
+    return [(source, brand, masked) for source, brand, masked, _, _
+            in scan_file_details(path, brands, line_limit)]
+
+
+def scan_file_details(path, brands=SUPPORTED_BRANDS, line_limit=0):
     findings = []
     for source, text in searchable_contents(path):
+        lines = text.splitlines()
         if line_limit:
-            text = "\n".join(text.splitlines()[:line_limit])
-        findings.extend((source, brand, mask_pan(number))
-                        for brand, number in find_pans(text, brands))
+            lines = lines[:line_limit]
+        for line_number, line in enumerate(lines, start=1):
+            for match in PAN_RE.finditer(line):
+                number = re.sub(r"[ \t-]", "", match.group())
+                brand = card_brand(number)
+                if brand not in brands or not is_luhn_valid(number):
+                    continue
+                context_start = max(0, match.start() - 80)
+                context_end = min(len(line), match.end() + 80)
+                sample = mask_pans_in_text(line[context_start:context_end].strip())
+                findings.append((source, brand, mask_pan(number), line_number, sample))
     return findings
 
 
@@ -193,7 +215,7 @@ def main(argv=None):
         for path in files:
             file_count += 1
             try:
-                findings = scan_file(path, options.brands, options.lines)
+                findings = scan_file_details(path, options.brands, options.lines)
             except (OSError, zipfile.BadZipFile, RuntimeError) as error:
                 print(Colors.WARNING + "[*] " + Colors.ENDC +
                       "Cannot process %s: %s" % (path, error), file=sys.stderr)
@@ -202,10 +224,13 @@ def main(argv=None):
             if findings:
                 summary = "Found %d PAN candidate(s) in %s\n" % (len(findings), path)
                 output.write(summary) if output else print(summary, end="")
-                if options.verbose:
-                    for source, brand, masked in findings:
+                for source, brand, masked, line_number, sample in findings:
+                    if output:
+                        output.write("\t%s:%d:\t%s (%s)\n\tSample: %s\n" %
+                                     (source, line_number, masked, brand.upper(), sample))
+                    elif options.verbose:
                         detail = "\t%s:\t%s (%s)\n" % (brand.upper(), masked, source)
-                        output.write(detail) if output else print(detail, end="")
+                        print(detail, end="")
         print(Colors.OKGREEN + "[*] " + Colors.ENDC +
               "Scan complete: %d files, %d findings." %
               (file_count, finding_count))

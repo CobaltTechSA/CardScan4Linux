@@ -38,6 +38,20 @@ class PanDetectionTests(unittest.TestCase):
             self.assertEqual(scanner.scan_file(path)[0][1:],
                              ("mastercard", "555555******4444"))
 
+    def test_scan_details_include_line_and_masked_sample(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "cards.txt"
+            path.write_text("nothing\nCustomer PAN: 4111-1111-1111-1111 active\n",
+                            encoding="utf-8")
+
+            source, brand, masked, line_number, sample = scanner.scan_file_details(path)[0]
+
+            self.assertEqual(source, str(path))
+            self.assertEqual((brand, masked, line_number),
+                             ("visa", "411111******1111", 2))
+            self.assertEqual(sample, "Customer PAN: 411111******1111 active")
+            self.assertNotIn("4111-1111-1111-1111", sample)
+
 
 if __name__ == "__main__":
     unittest.main()
