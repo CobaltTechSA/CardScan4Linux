@@ -141,6 +141,13 @@ def scan_file(path, brands=SUPPORTED_BRANDS, line_limit=0):
     return findings
 
 
+def format_elapsed(seconds):
+    seconds = int(seconds)
+    hours, remainder = divmod(seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return "%02d:%02d:%02d" % (hours, minutes, seconds)
+
+
 def build_parser():
     parser = argparse.ArgumentParser(description="Search Linux files for clear-text PANs.")
     parser.add_argument("-o", "--output", help="Append findings to this file.")
@@ -170,7 +177,9 @@ def main(argv=None):
         raise SystemExit("depth and line limits must be non-negative")
     print("CardScan4Linux %s" % VERSION)
     print(Colors.OKGREEN + "[*] " + Colors.ENDC + "Starting file-system scan...")
+    started_at = datetime.datetime.now()
     started = timeit.default_timer()
+    print("Fecha de inicio: %s" % started_at.strftime("%Y-%m-%d %H:%M:%S"))
     output = None
     try:
         if options.output:
@@ -197,10 +206,9 @@ def main(argv=None):
                     for source, brand, masked in findings:
                         detail = "\t%s:\t%s (%s)\n" % (brand.upper(), masked, source)
                         output.write(detail) if output else print(detail, end="")
-        elapsed = int(timeit.default_timer() - started)
         print(Colors.OKGREEN + "[*] " + Colors.ENDC +
-              "Scan complete: %d files, %d findings, %d seconds." %
-              (file_count, finding_count, elapsed))
+              "Scan complete: %d files, %d findings." %
+              (file_count, finding_count))
         return 0
     except (OSError, ValueError) as error:
         print(Colors.FAIL + "[*] " + Colors.ENDC + str(error), file=sys.stderr)
@@ -210,6 +218,9 @@ def main(argv=None):
     finally:
         if output:
             output.close()
+        print("Fecha de finalización: %s" %
+              datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        print("Tiempo transcurrido: %s" % format_elapsed(timeit.default_timer() - started))
 
 
 if __name__ == "__main__":
