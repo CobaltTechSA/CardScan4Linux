@@ -179,13 +179,13 @@ def main(argv=None):
     print(Colors.OKGREEN + "[*] " + Colors.ENDC + "Starting file-system scan...")
     started_at = datetime.datetime.now()
     started = timeit.default_timer()
-    print("Fecha de inicio: %s" % started_at.strftime("%Y-%m-%d %H:%M:%S"))
+    start_line = "Fecha de inicio: %s" % started_at.strftime("%Y-%m-%d %H:%M:%S")
+    print(start_line)
     output = None
     try:
         if options.output:
             output = open(options.output, "a", encoding="utf-8")
-            output.write("Hunting card numbers on %s\n" %
-                         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            output.write(start_line + "\n")
         file_count = finding_count = 0
         files = discover_files(options.path, options.max_depth, options.mindepth,
                                options.extensions, options.exclude_dir, options.minsize,
@@ -216,11 +216,16 @@ def main(argv=None):
     except KeyboardInterrupt:
         return 130
     finally:
+        end_line = "Fecha de finalización: %s" % datetime.datetime.now().strftime(
+            "%Y-%m-%d %H:%M:%S")
+        elapsed_line = "Tiempo transcurrido: %s" % format_elapsed(
+            timeit.default_timer() - started)
         if output:
+            output.write(end_line + "\n")
+            output.write(elapsed_line + "\n")
             output.close()
-        print("Fecha de finalización: %s" %
-              datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        print("Tiempo transcurrido: %s" % format_elapsed(timeit.default_timer() - started))
+        print(end_line)
+        print(elapsed_line)
 
 
 if __name__ == "__main__":
