@@ -3,6 +3,18 @@
 
 This script can be used to locally search through stored files for any Credit/Debit card details. It is portable and requires no additional Python (built with 2.7 in mind) libraries to operate.
 
+## Installation
+
+Run the installer directly from GitHub:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/CobaltTechSA/CardScan4Linux/master/install.sh | bash
+```
+
+The installer downloads the current scanner from GitHub, verifies that it is valid Python, checks for Python 3.8 or newer, and installs the command as `/usr/local/bin/cardscan4linux`. If a dependency is missing, it shows an installation command for the detected Linux package manager. Administrative permissions are requested through `sudo` only when needed.
+
+Verify the installation with `cardscan4linux --help`.
+
 ## Basic Usage 
 `cardscan4linux.py [-h] [-o OUTPUT] [-b {visa,mastercard,amex} ...] [-D DEPTH] [-d MINDEPTH] [-l LINES] [-p PATH] [-e EXTENSIONS ...] [-x EXCLUDE_DIR ...] [-max MAXSIZE] [-min MINSIZE] [-mount] [-v]`
 
