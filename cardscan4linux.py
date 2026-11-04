@@ -198,10 +198,11 @@ def main(argv=None):
             options.max_depth is not None and options.max_depth < 0):
         raise SystemExit("depth and line limits must be non-negative")
     print("CardScan4Linux %s" % VERSION)
-    print(Colors.OKGREEN + "[*] " + Colors.ENDC + "Starting file-system scan...")
     started_at = datetime.datetime.now()
     started = timeit.default_timer()
-    start_line = "Fecha de inicio: %s" % started_at.strftime("%Y-%m-%d %H:%M:%S")
+    print(Colors.OKGREEN + "[*] " + Colors.ENDC + "Starting file-system scan at %s" % started_at.strftime("%Y-%m-%d %H:%M:%S"))
+
+    start_line = "Start time: %s" % started_at.strftime("%Y-%m-%d %H:%M:%S")
     print(start_line)
     output = None
     try:
@@ -231,26 +232,24 @@ def main(argv=None):
                     elif options.verbose:
                         detail = "\t%s:\t%s (%s)\n" % (brand.upper(), masked, source)
                         print(detail, end="")
+        end_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        end_line = "End time: %s" % end_time
+        time_elapsed = format_elapsed(timeit.default_timer() - started)
+        elapsed_line = "Time elapsed: %s" % time_elapsed
+        if output:
+            output.write(end_line + "\n")
+            output.write(elapsed_line + "\n")
+            output.close()
+
         print(Colors.OKGREEN + "[*] " + Colors.ENDC +
-              "Scan complete: %d files, %d findings." %
-              (file_count, finding_count))
+              "Scan complete in %s at %s: %d files, %d findings." % (time_elapsed, end_time, file_count, finding_count))
         return 0
     except (OSError, ValueError) as error:
         print(Colors.FAIL + "[*] " + Colors.ENDC + str(error), file=sys.stderr)
         return 1
     except KeyboardInterrupt:
         return 130
-    finally:
-        end_line = "Fecha de finalización: %s" % datetime.datetime.now().strftime(
-            "%Y-%m-%d %H:%M:%S")
-        elapsed_line = "Tiempo transcurrido: %s" % format_elapsed(
-            timeit.default_timer() - started)
-        if output:
-            output.write(end_line + "\n")
-            output.write(elapsed_line + "\n")
-            output.close()
-        print(end_line)
-        print(elapsed_line)
+
 
 
 if __name__ == "__main__":
