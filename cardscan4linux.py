@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import datetime
-# Version: 1.1.0
+# Version: 1.1.1
 # Author: Adam Govier (ins1gn1a) - September 2015
 # Email: me@ins1gn1a.com
 #
@@ -77,7 +77,7 @@ print(" / ___|__ _ _ __ __| / ___|  ___ __ _ _ __ | || | | |   (_)_ __  _   ___ 
 print("| |   / _` | '__/ _` \___ \ / __/ _` | '_ \| || |_| |   | | '_ \| | | \ \/ /")
 print("| |__| (_| | | | (_| |___) | (_| (_| | | | |__   _| |___| | | | | |_| |>  <")
 print(" \____\__,_|_|  \__,_|____/ \___\__,_|_| |_|  |_| |_____|_|_| |_|\__,_/_/\_\ ")
-print("----------------------------------------------------------- Version 1.1.0 --")
+print("----------------------------------------------------------- Version 1.1.1 --")
 
 
 def luhn_checksum(card_number):
@@ -101,14 +101,10 @@ def is_luhn_valid(card_number):
 # String concatenation for file extension searching.
 extCmd = ""
 z = 0
-if options.extensions is not None:
-    for ext in options.extensions:
-        if z == 0:
-            extCmd = " -name '*.%s'" % (ext)
-            z += 1
-        else:
-            extCmd = extCmd + (" -o -name '*.%s'" % (ext))
-            z += 1
+if options.extensions:
+    extCmd = "\( " + " -o ".join(
+        ["-iname '*.%s'" % ext for ext in options.extensions]
+    ) + " \)"
 
 # Sizing
 max = ("-size -" + options.maxsize)  # Default 100 Kilobytes (100k)
@@ -117,13 +113,12 @@ min = ("-size +" + options.minsize)  # Default 16 bytes (16 c)
 # Exclude files via -x/--exclude
 y = 0
 exclude_cmd = ""
-for excl in options.exclude_dir:
-    if y == 0:
-        exclude_cmd = " ! -path '%s/*'" % (excl)
-        y += 1
-    else:
-        exclude_cmd = exclude_cmd + (" -a ! -path '%s/*'" % (excl))
-        y += 1
+prune_dirs = ""
+if options.exclude_dir:
+    prune_parts = []
+    for excl in options.exclude_dir:
+        prune_parts.append("-path '%s'" % excl.rstrip('/'))
+    prune_dirs = "\( " + " -o ".join(prune_parts) + " \) -prune -o "
 
 if y > 0:
     exclude_cmd = exclude_cmd + " "
@@ -176,9 +171,22 @@ else:
 
 # Create a list of all files with the provided inputs
 try:
-    cmdStr = 'find %s %s-maxdepth %s %s-type f \( %s %s\) %s %s ' % (
-        options.path, remote_mount, options.depth, min_depth, extCmd, exclude_cmd, max, min)
-    # print('Command: ' + cmdStr)
+    cmdStr = (
+        "find {path} {mount} {mindepth}-maxdepth {depth} "
+        "{prune}"
+        "-type f {exts} {max} {min}"
+    ).format(
+        path=options.path,
+        mount=remote_mount,
+        mindepth=min_depth,
+        depth=options.depth,
+        prune=prune_dirs,
+        exts=extCmd,
+        max=max,
+        min=min
+    )
+
+    print('Command: ' + cmdStr)
     full_path_list = subprocess.check_output(cmdStr, shell=True)
     full_path_list = full_path_list.rstrip().split('\n'.encode())
 except Exception as e:
@@ -263,6 +271,9 @@ try:
 
         except KeyboardInterrupt:
             break
+        except (UnicodeDecodeError, FileNotFoundError, IsADirectoryError):
+            print(bcolors.WARNING + "[*] " + bcolors.ENDC + "Cannot process file '" + str(filepath) + "'.")
+            continue
         except Exception as e:
             if log_file:
                 traceback.print_exc()
